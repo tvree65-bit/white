@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ============================================================ -->
+<!-- شاشة بداية تحتوي على صورة ونص في المنتصف وأسفل -->
+<!-- ============================================================ -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- الخلفية البيضاء أو أي لون تريده -->
+    <item>
+        <color android:color="@android:color/white"/>
+    </item>
+    
+    <!-- الصورة في المنتصف -->
+    <item
+        android:gravity="center">
+        <bitmap
+            android:src="@drawable/splash_image"
+            android:gravity="center"
+            android:antialias="true"
+            android:filter="true" />
+    </item>
+    
+    <!-- النص في الأسفل -->
+    <item
+        android:gravity="bottom|center_horizontal"
+        android:bottom="50dp">
+        <color android:color="#00000000"/> <!-- خلفية شفافة -->
+    </item>
+    
+</layer-list>
