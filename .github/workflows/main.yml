@@ -20,17 +20,36 @@ jobs:
         distribution: 'temurin'
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-
-    - name: Install Android SDK components
       run: |
+        # تثبيت Android SDK يدوياً
+        sudo apt-get update
+        sudo apt-get install -y wget unzip
+        
+        # تحميل Android SDK Command Line Tools
+        cd /usr/local
+        sudo wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        sudo unzip -q commandlinetools-linux-11076708_latest.zip
+        sudo rm commandlinetools-linux-11076708_latest.zip
+        sudo mkdir -p android-sdk/cmdline-tools
+        sudo mv cmdline-tools android-sdk/cmdline-tools/latest
+        
+        # تعيين المتغيرات
+        echo "ANDROID_HOME=/usr/local/android-sdk" >> $GITHUB_ENV
+        echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+        
+        # قبول التراخيص
+        yes | sudo /usr/local/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        
         # تثبيت الإصدارات المطلوبة
-        yes | sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
-        # تحقق من التثبيت
-        echo "=== Build Tools 34.0.0 ==="
-        ls -la $ANDROID_HOME/build-tools/34.0.0/ || echo "NOT FOUND"
-        echo "=== Android SDK Path ==="
-        echo $ANDROID_HOME
+        sudo /usr/local/android-sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+
+    - name: Verify AAPT2
+      run: |
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "Checking for aapt2:"
+        find $ANDROID_HOME -name "aapt2" 2>/dev/null
+        ls -la $ANDROID_HOME/build-tools/34.0.0/ || echo "Build tools 34.0.0 not found"
 
     - name: Create local.properties
       run: echo "sdk.dir=$ANDROID_HOME" > local.properties
@@ -38,30 +57,10 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x gradlew
 
-    - name: Check Gradle version
-      run: ./gradlew --version
-
-    - name: Build AAB with full logs
-      run: |
-        ./gradlew bundleRelease --stacktrace --info 2>&1 | tee build.log
-        echo "=== BUILD COMPLETED ==="
-
-    - name: Check for AAB file
-      run: |
-        echo "=== Searching for AAB files ==="
-        find app/build -name "*.aab" 2>/dev/null || echo "No AAB found"
-        echo "=== Build outputs directory ==="
-        ls -la app/build/outputs/ 2>/dev/null || echo "No outputs directory"
-
-    - name: Upload build log
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-log
-        path: build.log
+    - name: Build AAB
+      run: ./gradlew bundleRelease
 
     - name: Upload AAB
-      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: app-release
