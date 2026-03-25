@@ -9,27 +9,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # 1️⃣ تحميل المشروع
+      - name: Checkout project
+        uses: actions/checkout@v4
 
-      - name: Install JDK 17
+      # 2️⃣ تثبيت Java 17
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Force Java 17 globally
-        run: |
-          echo "JAVA_HOME=$JAVA_HOME"
-          export JAVA_HOME=$JAVA_HOME
-          export PATH=$JAVA_HOME/bin:$PATH
-          java -version
+      # 3️⃣ تأكيد Java
+      - name: Check Java version
+        run: java -version
 
-      - name: Give permission
+      # 4️⃣ إعطاء صلاحية للـ gradlew
+      - name: Grant permission
         run: chmod +x gradlew
 
+      # 5️⃣ فرض Java 17 داخل Gradle (مهم جدًا 🔥)
       - name: Build AAB
-        run: ./gradlew bundleRelease --no-daemon
+        run: ./gradlew bundleRelease -Dorg.gradle.java.home=/usr/lib/jvm/temurin-17-jdk-amd64 --no-daemon
 
+      # 6️⃣ رفع ملف AAB
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
