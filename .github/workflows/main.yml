@@ -24,10 +24,13 @@ jobs:
 
     - name: Install Android SDK components
       run: |
-        # تثبيت الإصدارات المطلوبة حسب build.gradle
-        yes | sdkmanager "platforms;android-34" "build-tools;35.0.0" "platform-tools"
+        # تثبيت الإصدارات المطلوبة
+        yes | sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
         # تحقق من التثبيت
-        ls -la $ANDROID_HOME/build-tools/35.0.0/ || echo "Build tools 35.0.0 not found"
+        echo "=== Build Tools 34.0.0 ==="
+        ls -la $ANDROID_HOME/build-tools/34.0.0/ || echo "NOT FOUND"
+        echo "=== Android SDK Path ==="
+        echo $ANDROID_HOME
 
     - name: Create local.properties
       run: echo "sdk.dir=$ANDROID_HOME" > local.properties
@@ -35,10 +38,30 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x gradlew
 
-    - name: Build AAB
-      run: ./gradlew bundleRelease --stacktrace
+    - name: Check Gradle version
+      run: ./gradlew --version
+
+    - name: Build AAB with full logs
+      run: |
+        ./gradlew bundleRelease --stacktrace --info 2>&1 | tee build.log
+        echo "=== BUILD COMPLETED ==="
+
+    - name: Check for AAB file
+      run: |
+        echo "=== Searching for AAB files ==="
+        find app/build -name "*.aab" 2>/dev/null || echo "No AAB found"
+        echo "=== Build outputs directory ==="
+        ls -la app/build/outputs/ 2>/dev/null || echo "No outputs directory"
+
+    - name: Upload build log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: build.log
 
     - name: Upload AAB
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: app-release
