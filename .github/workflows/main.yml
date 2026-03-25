@@ -22,10 +22,15 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        packages: |
-          platforms;android-33
-          build-tools;30.0.3
-          build-tools;33.0.0
+        api-level: 33
+        build-tools: 30.0.3
+        cmake: 3.22.1
+        ndk: 25.1.8937393
+    
+    - name: Create local.properties
+      run: |
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        cat local.properties
     
     - name: Make gradlew executable
       run: chmod +x gradlew
