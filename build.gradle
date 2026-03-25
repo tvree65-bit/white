@@ -33,11 +33,11 @@ subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
             android {
-                // التأكد من وجود build tools
+                // استخدام إصدارات مستقرة
                 compileSdkVersion 34
+                buildToolsVersion "34.0.0"  // تغيير من 35.0.0 إلى 34.0.0
                 
                 aaptOptions {
-                    // تعطيل ضغط الملفات لتحسين التوافق
                     useNewCruncher false
                 }
             }
@@ -46,7 +46,7 @@ subprojects {
             project.tasks.configureEach { task ->
                 if (task.name.contains("merge") && task.name.contains("Resources")) {
                     task.doFirst {
-                        def aapt2Path = "${androidSdkPath}/build-tools/35.0.0/aapt2"
+                        def aapt2Path = "${androidSdkPath}/build-tools/34.0.0/aapt2"  // تغيير المسار
                         def aapt2File = file(aapt2Path)
                         if (aapt2File.exists()) {
                             println "Setting AAPT2 path to: ${aapt2Path}"
