@@ -21,40 +21,37 @@ jobs:
     
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      with:
-        api-level: 34
-        build-tools: 35.0.0
     
-    - name: Accept Android Licenses
-      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-    
-    - name: Verify SDK Installation
+    - name: Install SDK components
       run: |
-        echo "ANDROID_HOME: $ANDROID_HOME"
-        echo "Build Tools 35.0.0 files:"
-        ls -la $ANDROID_HOME/build-tools/35.0.0/ | head -10
-        echo "Checking for aapt2:"
-        find $ANDROID_HOME -name "aapt2" 2>/dev/null || echo "aapt2 not found"
+        echo "y" | sdkmanager "platforms;android-34" "build-tools;35.0.0" "platform-tools"
+        sdkmanager --list | grep -E "build-tools|platforms"
+    
+    - name: Accept licenses
+      run: yes | sdkmanager --licenses
     
     - name: Create local.properties
       run: echo "sdk.dir=$ANDROID_HOME" > local.properties
     
-    - name: Grant execute permission for gradlew
+    - name: Make gradlew executable
       run: chmod +x gradlew
     
     - name: Build AAB
+      run: ./gradlew bundleRelease --stacktrace
+    
+    - name: List output files
       run: |
-        ./gradlew bundleRelease --stacktrace --info 2>&1 | tee build.log
+        echo "Checking for AAB file:"
+        find app/build -name "*.aab" 2>/dev/null || echo "No AAB found"
+        echo "Checking build outputs:"
+        ls -la app/build/outputs/ || echo "No outputs directory"
+        ls -la app/build/outputs/bundle/ 2>/dev/null || echo "No bundle directory"
     
     - name: Upload AAB
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: app/build/outputs/bundle/release/app-release.aab
-    
-    - name: Upload Build Log (if failed)
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-log
-        path: build.log
+        path: |
+          app/build/outputs/bundle/release/*.aab
+          app/build/outputs/apk/release/*.apk
